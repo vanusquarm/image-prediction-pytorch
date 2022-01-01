@@ -16,6 +16,7 @@ def test(model, test_loader):
           testing data loader and will get the test accuray/loss of the model
           Remember to include any debugging/profiling hooks that you might need
     '''
+    
     pass
 
 def train(model, train_loader, criterion, optimizer):
@@ -27,17 +28,20 @@ def train(model, train_loader, criterion, optimizer):
     pass
     
 def net():
-    '''
-    TODO: Complete this function that initializes your model
-          Remember to use a pretrained model
-    '''
-    pass
+    import torch.nn as nn
+    from torchvision import models
+    model = models.resnet50(pretrained=True)
+    for param in model.parameters():
+        param.requires_grad = False   
+
+    num_features=model.fc.in_features
+    model.fc = nn.Sequential(nn.Linear(num_features, 133))
+    return model
 
 def create_data_loaders(data, batch_size):
-    '''
-    This is an optional function that you may or may not need to implement
-    depending on whether you need to use data loaders or not
-    '''
+    train_data = 
+    test_data = 
+    valid_data = 
     pass
 
 def main(args):
