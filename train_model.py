@@ -9,19 +9,23 @@ import torchvision.models as models
 import torchvision.transforms as transforms
 import os
 import argparse
+from PIL import ImageFile
+ImageFile.LOAD_TRUNCATED_IMAGES = True
 
 # TODO: Import dependencies for Debugging andd Profiling
 # import smdebug.pytorch as smd
 
 def test(model, test_loader):
-    for (inputs, labels) in train_loader:
+    model.eval()
+    for (inputs, labels) in test_loader:
         outputs = model(inputs)
         _, preds = torch.max(outputs, 1)
-        torch.sum(preds == labels.data)
+        print(torch.sum(preds == labels.data))
     
 
 def train(model, train_loader, epochs, criterion, optimizer):
     # https://github.com/awslabs/sagemaker-debugger/blob/master/docs/pytorch.md
+    model.train()
     count = 0
     for e in range(epochs):
         print(e)
@@ -32,9 +36,10 @@ def train(model, train_loader, epochs, criterion, optimizer):
             loss.backward()
             optimizer.step()
             count += len(inputs)
-            print(".")
+            print(".", end="")
+            break
         print("\n")
-
+    return model
 
 def net():
     model = models.resnet18(pretrained=True)
@@ -71,9 +76,15 @@ def create_data_loaders(data, batch_size, test_batch_size):
         torch.utils.data.DataLoader(testset, batch_size=test_batch_size, shuffle=False))
 
 def main(args):
-    model=net()    
-    loss_criterion = nn.NLLLoss()
-    optimizer = optim.SGD(model.parameters(), lr = args.lr, momentum=args.momentum)
+    device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
+    print(f"Running on Device {device}")
+
+    model=net()
+    model=model.to(device)
+    loss_criterion = nn.CrossEntropyLoss()
+    # nn.NLLLoss()
+    optimizer = optim.Adam(model.fc.parameters(), lr=args.lr)
+    # optim.SGD(model.parameters(), lr = args.lr, momentum=args.momentum)
 
     # https://github.com/awslabs/sagemaker-debugger/blob/master/docs/pytorch.md
     # hook = smd.Hook.create_from_json_file()
@@ -84,7 +95,7 @@ def main(args):
     
     model=train(model, train_loader, args.epochs, loss_criterion, optimizer)
     
-    test(model, test_loader, criterion)
+    test(model, test_loader)
     
     torch.save(model, args.model_dir)
 
@@ -94,26 +105,26 @@ if __name__=='__main__':
     parser.add_argument(
         "--batch-size",
         type=int,
-        default=64,
+        default=32,
         metavar="N",
-        help="input batch size for training (default: 64)",
+        help="input batch size for training (default: 256)",
     )
     parser.add_argument(
         "--test-batch-size",
         type=int,
-        default=1000,
+        default=32,
         metavar="N",
         help="input batch size for testing (default: 1000)",
     )
     parser.add_argument(
         "--epochs",
         type=int,
-        default=5,
+        default=2,
         metavar="N",
-        help="number of epochs to train (default: 10)",
+        help="number of epochs to train (default: 2)",
     )
     parser.add_argument(
-        "--lr", type=float, default=0.01, metavar="LR", help="learning rate (default: 0.01)"
+        "--lr", type=float, default=0.001, metavar="LR", help="learning rate (default: 0.001)"
     )
     parser.add_argument(
         "--momentum", type=float, default=0.5, metavar="M", help="SGD momentum (default: 0.5)"
