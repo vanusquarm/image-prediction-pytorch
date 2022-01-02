@@ -13,22 +13,29 @@ from PIL import ImageFile
 ImageFile.LOAD_TRUNCATED_IMAGES = True
 
 # TODO: Import dependencies for Debugging andd Profiling
-# import smdebug.pytorch as smd
+import smdebug.pytorch as smd
 
-def test(model, test_loader):
+def test(model, test_loader, hook):
     model.eval()
+    hook.set_mode(smd.modes.EVAL)
     running_corrects=0
     for (inputs, labels) in test_loader:
         outputs = model(inputs)
         _, preds = torch.max(outputs, 1)
         running_corrects += torch.sum(preds == labels.data).item()
     total_acc = running_corrects/ len(test_loader.dataset)
-    print(f"Testing Accuracy: {100*total_acc}")
+    print(f"Test set: Average accuracy: {100*total_acc}")
     
 
-def train(model, train_loader, epochs, criterion, optimizer):
+def train(model, train_loader, epochs, criterion, optimizer, hook):
     # https://github.com/awslabs/sagemaker-debugger/blob/master/docs/pytorch.md
+    # hook = smd.Hook.create_from_json_file()
+    # hook.register_module(net)
+    # hook.register_loss(loss_criterion)
+    
+    
     model.train()
+    hook.set_mode(smd.modes.TRAIN)
     count = 0
     for e in range(epochs):
         print(e)
@@ -39,6 +46,8 @@ def train(model, train_loader, epochs, criterion, optimizer):
             loss.backward()
             optimizer.step()
             count += len(inputs)
+            if count > 400:
+                break
     return model
 
 def net():
@@ -84,16 +93,14 @@ def main(args):
     loss_criterion = nn.CrossEntropyLoss()
     optimizer = optim.Adam(model.fc.parameters(), lr=args.lr)
 
-    # https://github.com/awslabs/sagemaker-debugger/blob/master/docs/pytorch.md
-    # hook = smd.Hook.create_from_json_file()
-    # hook.register_module(net)
-    # hook.register_loss(loss_criterion)
+    hook = smd.Hook.create_from_json_file()
+    hook.register_hook(model)
     
     train_loader, valid_loader, test_loader = create_data_loaders(args.data, args.batch_size, args.test_batch_size)
     
-    model=train(model, train_loader, args.epochs, loss_criterion, optimizer)
+    model=train(model, train_loader, args.epochs, loss_criterion, optimizer, hook)
     
-    test(model, test_loader)
+    test(model, test_loader, hook)
     
     torch.save(model.cpu().state_dict(), os.path.join(args.model_dir, "model.pth"))
 
