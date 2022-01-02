@@ -17,10 +17,13 @@ ImageFile.LOAD_TRUNCATED_IMAGES = True
 
 def test(model, test_loader):
     model.eval()
+    running_corrects=0
     for (inputs, labels) in test_loader:
         outputs = model(inputs)
         _, preds = torch.max(outputs, 1)
-        print(torch.sum(preds == labels.data))
+        running_corrects += torch.sum(preds == labels.data).item()
+    total_acc = running_corrects/ len(test_loader.dataset)
+    print(f"Testing Accuracy: {100*total_acc}")
     
 
 def train(model, train_loader, epochs, criterion, optimizer):
@@ -36,9 +39,6 @@ def train(model, train_loader, epochs, criterion, optimizer):
             loss.backward()
             optimizer.step()
             count += len(inputs)
-            print(".", end="")
-            break
-        print("\n")
     return model
 
 def net():
@@ -82,9 +82,7 @@ def main(args):
     model=net()
     model=model.to(device)
     loss_criterion = nn.CrossEntropyLoss()
-    # nn.NLLLoss()
     optimizer = optim.Adam(model.fc.parameters(), lr=args.lr)
-    # optim.SGD(model.parameters(), lr = args.lr, momentum=args.momentum)
 
     # https://github.com/awslabs/sagemaker-debugger/blob/master/docs/pytorch.md
     # hook = smd.Hook.create_from_json_file()
@@ -97,7 +95,7 @@ def main(args):
     
     test(model, test_loader)
     
-    torch.save(model, args.model_dir)
+    torch.save(model.cpu().state_dict(), os.path.join(args.model_dir, "model.pth"))
 
 if __name__=='__main__':
     parser=argparse.ArgumentParser()
@@ -130,7 +128,7 @@ if __name__=='__main__':
         "--momentum", type=float, default=0.5, metavar="M", help="SGD momentum (default: 0.5)"
     )
     parser.add_argument('--data', type=str, default=os.environ["SM_CHANNEL_TRAIN"])
-    parser.add_argument('--model_dir', type=str, default="s3://sagemaker-us-east-1-709614815312/dogmodel")
+    parser.add_argument('--model_dir', type=str, default=os.environ['SM_MODEL_DIR'])
     
     args=parser.parse_args()
     
