@@ -7,28 +7,35 @@ import torch.optim as optim
 import torchvision
 import torchvision.models as models
 import torchvision.transforms as transforms
-
+import os
 import argparse
 
 # TODO: Import dependencies for Debugging andd Profiling
-import smdebug.pytorch as smd
+# import smdebug.pytorch as smd
 
 def test(model, test_loader):
     for (inputs, labels) in train_loader:
-        outputs = net(inputs)
+        outputs = model(inputs)
         _, preds = torch.max(outputs, 1)
         torch.sum(preds == labels.data)
     
 
-def train(model, train_loader, criterion, optimizer):
+def train(model, train_loader, epochs, criterion, optimizer):
     # https://github.com/awslabs/sagemaker-debugger/blob/master/docs/pytorch.md
-    for (inputs, labels) in train_loader:
-        optimizer.zero_grad()
-        outputs = net(inputs)
-        loss = criterion(outputs, labels)
-        loss.backward()
-        optimizer.step()
-    
+    count = 0
+    for e in range(epochs):
+        print(e)
+        for (inputs, labels) in train_loader:
+            optimizer.zero_grad()
+            outputs = model(inputs)
+            loss = criterion(outputs, labels)
+            loss.backward()
+            optimizer.step()
+            count += len(inputs)
+            print(".")
+        print("\n")
+
+
 def net():
     model = models.resnet18(pretrained=True)
     for param in model.parameters():
@@ -55,13 +62,13 @@ def create_data_loaders(data, batch_size, test_batch_size):
         ])
     
     trainset = torchvision.datasets.ImageFolder(root=train_data_path, transform=train_transform)
-    trainset = torchvision.datasets.ImageFolder(root=test_data_path, transform=test_transform)
-    trainset = torchvision.datasets.ImageFolder(root=validation_data_path, transform=test_transform)
+    validset = torchvision.datasets.ImageFolder(root=validation_data_path, transform=test_transform)
+    testset = torchvision.datasets.ImageFolder(root=test_data_path, transform=test_transform)
     
     return (
         torch.utils.data.DataLoader(trainset, batch_size=batch_size, shuffle=True),
-        torch.utils.data.DataLoader(validset, batch_size=test_batch_size, shuffle=True),
-        torch.utils.data.DataLoader(testset, batch_size=test_batch_size, shuffle=True))
+        torch.utils.data.DataLoader(validset, batch_size=test_batch_size, shuffle=False),
+        torch.utils.data.DataLoader(testset, batch_size=test_batch_size, shuffle=False))
 
 def main(args):
     model=net()    
@@ -69,13 +76,13 @@ def main(args):
     optimizer = optim.SGD(model.parameters(), lr = args.lr, momentum=args.momentum)
 
     # https://github.com/awslabs/sagemaker-debugger/blob/master/docs/pytorch.md
-    hook = smd.Hook.create_from_json_file()
-    hook.register_module(net)
-    hook.register_loss(loss_criterion)
+    # hook = smd.Hook.create_from_json_file()
+    # hook.register_module(net)
+    # hook.register_loss(loss_criterion)
     
-    train_loader, test_loader = create_data_loaders(args.data, args.batch_size, args.test_batch_size)
+    train_loader, valid_loader, test_loader = create_data_loaders(args.data, args.batch_size, args.test_batch_size)
     
-    model=train(model, train_loader, loss_criterion, optimizer)
+    model=train(model, train_loader, args.epochs, loss_criterion, optimizer)
     
     test(model, test_loader, criterion)
     
@@ -83,7 +90,7 @@ def main(args):
 
 if __name__=='__main__':
     parser=argparse.ArgumentParser()
-    
+
     parser.add_argument(
         "--batch-size",
         type=int,
@@ -111,9 +118,8 @@ if __name__=='__main__':
     parser.add_argument(
         "--momentum", type=float, default=0.5, metavar="M", help="SGD momentum (default: 0.5)"
     )
-    parser.add_argument('--data', type=str)
-    parser.add_argument('--model_dir', type=str, default=os.environ['SM_MODEL_DIR'])
-    parser.add_argument('--output_dir', type=str, default=os.environ['SM_OUTPUT_DATA_DIR'])
+    parser.add_argument('--data', type=str, default=os.environ["SM_CHANNEL_TRAIN"])
+    parser.add_argument('--model_dir', type=str, default="s3://sagemaker-us-east-1-709614815312/dogmodel")
     
     args=parser.parse_args()
     
