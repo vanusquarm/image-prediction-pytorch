@@ -37,7 +37,7 @@ The model is deployed at an endpointed named `pytorch-inference-2022-01-03-04-57
 It takes the `content_type` of "image/jpeg" as Tensor binary input and return the classification result, the other `content_type`s are handled with an exception. 
 The model automatically resizes the image that is inputted, so there is no need for preprocessing images before querying. 
 
-To query the endpoint, use Python Pillow and io to transform the jpg to Tensor binary and serve it to the endpoint.
+To query the endpoint, use [Python Pillow](https://pypi.org/project/Pillow/) and io to transform the jpg to Tensor binary and serve it to the endpoint.
 ```
 from PIL import Image
 import io
@@ -46,7 +46,10 @@ Image.open("dogImages/test/001.Affenpinscher/Affenpinscher_00036.jpg").save(buf,
 
 response = predictor.predict(buf.getvalue())
 ```
-**TODO** Remember to provide a screenshot of the deployed active endpoint in Sagemaker.
+
+**ACTIVE ENDPOINT**
+
+![Active Endpoint](active_endpoint_screenshot.png)
 
 ## Standout Suggestions
 **TODO (Optional):** This is where you can provide information about any standout suggestions that you have attempted.
