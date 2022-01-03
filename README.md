@@ -73,5 +73,9 @@ response = predictor.predict(buf.getvalue())
 ```
 
 **ACTIVE ENDPOINT**
-
+- SAGEMAKER STUDIO UI
 ![Active Endpoint](active_endpoint_screenshot.png)
+
+- SAGEMAKER INFERENCE UI 
+<img width="1105" alt="Screen Shot 2022-01-02 at 10 12 17 PM" src="https://user-images.githubusercontent.com/62487364/147904512-637fafd2-7145-4d92-be54-c0d32c5473e0.png">
+
