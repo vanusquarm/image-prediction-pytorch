@@ -5,13 +5,11 @@ I used AWS Sagemaker to train a ResNet-18 to perform image classification and us
 
 
 ## Project Set Up and Installation
-Enter AWS through the gateway in the course and open SageMaker Studio. 
-Download the starter files.
-Download/Make the dataset available. 
+I cloned the project repository and downloaded the starter files. 
 
 ## Dataset
-The provided dataset is the dogbreed classification dataset which can be found in the classroom.
-The project is designed to be dataset independent so if there is a dataset that is more interesting or relevant to your work, you are welcome to use it to complete the project.
+The dataset I used was the dogbreed classification dataset which can be found in the classroom.
+I verfied the folder structure and some of the images. 
 
 ### Access
 I uploaded the data to an S3 bucket through the AWS Gateway so that SageMaker has access to the data. 
@@ -45,11 +43,8 @@ metric_definitions = [{"Name": "average test accuracy", "Regex": "Test set: Aver
 **Best Hyperparameters:**
 ![Hyperparameters](https://user-images.githubusercontent.com/62487364/147903139-41235fc6-1c2d-4a97-a471-ab3520adf9f3.png)
 
-- Tune at least two hyperparameters
-- Retrieve the best best hyperparameters from all your training jobs
 
 ## Debugging and Profiling
-
 First, I made a working model with tuned hyperparameters. Then I imported the rules and configs needed to set up the debugger and profiler. I set the rules and configs according to what I wanted to test, for example, overfit and GPU utilization. After that, I made the required adjustments to `train_model.py` to make my debugger and profiler work. I finally ran it with a new estimator and printed the results. 
 
 ### Results
@@ -58,7 +53,6 @@ The other rules were tested and passed without any issues.
 
 
 ## Model Deployment
-**TODO**: Give an overview of the deployed model and instructions on how to query the endpoint with a sample input.
 The model is deployed at an endpointed named `pytorch-inference-2022-01-03-04-57-09-279` on a `ml.m5.large` instance.
 It takes the `content_type` of "image/jpeg" as Tensor binary input and return the classification result, the other `content_type`s are handled with an exception. 
 The model automatically resizes the image that is inputted, so there is no need for preprocessing images before querying. 
@@ -76,6 +70,3 @@ response = predictor.predict(buf.getvalue())
 **ACTIVE ENDPOINT**
 
 ![Active Endpoint](active_endpoint_screenshot.png)
-
-## Standout Suggestions
-**TODO (Optional):** This is where you can provide information about any standout suggestions that you have attempted.
