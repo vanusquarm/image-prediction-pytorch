@@ -22,7 +22,7 @@ The hyperparameters I have tuned were:
 - batch size
 - epochs
 
-```
+```python
 hyperparameter_ranges = {
     "lr": ContinuousParameter(0.1, 0.11),
     "batch-size": CategoricalParameter([16, 32]),
@@ -31,13 +31,15 @@ hyperparameter_ranges = {
 ```
 
 I tuned to maximize the average test accuracy with the following. 
-```
+```python
 objective_metric_name = "average test accuracy"
 objective_type = "Maximize"
 metric_definitions = [{"Name": "average test accuracy", "Regex": "Test set: Average accuracy: ([0-9\\.]+)"}]
 ```
 
 **Training Jobs:**
+I used 4 max jobs with 2 concurrent jobs.
+It took 14 minutes to complete all 4 jobs, I will use 4 concurrent jobs next time to save time. 
 ![Training Jobs](https://user-images.githubusercontent.com/62487364/147903084-75bc927d-5775-43dc-9763-34c0199106d0.png)
 
 **Best Hyperparameters:**
@@ -51,6 +53,9 @@ First, I made a working model with tuned hyperparameters. Then I imported the ru
 Although I added the rule `LowGPUUtilization` for the profiler, I could not see it in action since I could not afford to run a GPU instance. 
 The other rules were tested and passed without any issues. 
 
+If `LowGPUUtilization` is observed, I would switch from a GPU instance to a CPU instance to save cost.  
+
+If there was an issue such as job failure due to OutOfMemory while debugging, I would choose a bigger machine with more memory to combat this. 
 
 ## Model Deployment
 The model is deployed at an endpointed named `pytorch-inference-2022-01-03-04-57-09-279` on a `ml.m5.large` instance.
@@ -58,7 +63,7 @@ It takes the `content_type` of "image/jpeg" as Tensor binary input and return th
 The model automatically resizes the image that is inputted, so there is no need for preprocessing images before querying. 
 
 To query the endpoint, use [Python Pillow](https://pypi.org/project/Pillow/) and io to transform the jpg to Tensor binary and serve it to the endpoint.
-```
+```python
 from PIL import Image
 import io
 buf = io.BytesIO()
