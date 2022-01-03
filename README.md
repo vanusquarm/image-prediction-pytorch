@@ -20,6 +20,22 @@ The hyperparameters I have tuned were:
 - learning rate 
 - batch size
 - epochs
+
+```
+hyperparameter_ranges = {
+    "lr": ContinuousParameter(0.1, 0.11),
+    "batch-size": CategoricalParameter([16, 32]),
+    "epochs": IntegerParameter(1, 2)
+}
+```
+
+I tuned to maximize the average test accuracy with the following. 
+```
+objective_metric_name = "average test accuracy"
+objective_type = "Maximize"
+metric_definitions = [{"Name": "average test accuracy", "Regex": "Test set: Average accuracy: ([0-9\\.]+)"}]
+```
+
 **Training Jobs:**
 ![Training Jobs](https://user-images.githubusercontent.com/62487364/147903084-75bc927d-5775-43dc-9763-34c0199106d0.png)
 
