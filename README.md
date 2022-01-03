@@ -1,6 +1,8 @@
 # Image Classification using AWS SageMaker
+I used AWS Sagemaker to train a ResNet-18 to perform image classification and used the Sagemaker profiling, debugger, and hyperparameter tuning with $3. 
 
-Use AWS Sagemaker to train a pretrained model that can perform image classification by using the Sagemaker profiling, debugger, hyperparameter tuning and other good ML engineering practices. This can be done on either the provided dog breed classication data set or one of your choice.
+<img width="400" alt="Screen Shot 2022-01-02 at 10 11 52 PM" src="https://user-images.githubusercontent.com/62487364/147903583-ac6b7cce-edc1-430e-8a08-6227045521fc.png">
+
 
 ## Project Set Up and Installation
 Enter AWS through the gateway in the course and open SageMaker Studio. 
@@ -12,10 +14,11 @@ The provided dataset is the dogbreed classification dataset which can be found i
 The project is designed to be dataset independent so if there is a dataset that is more interesting or relevant to your work, you are welcome to use it to complete the project.
 
 ### Access
-Upload the data to an S3 bucket through the AWS Gateway so that SageMaker has access to the data. 
+I uploaded the data to an S3 bucket through the AWS Gateway so that SageMaker has access to the data. 
+- s3://sagemaker-us-east-1-709614815312/dog-image-data/
 
 ## Hyperparameter Tuning
-I chose ResNet-18 because it is fast and gives good results. 
+I chose ResNet-18 because the dataset I chose was for image classification and ResNet-18 is fast and gives good results. 
 The hyperparameters I have tuned were:
 - learning rate 
 - batch size
