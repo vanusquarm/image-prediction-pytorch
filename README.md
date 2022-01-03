@@ -1,5 +1,5 @@
 # Image Classification using AWS SageMaker
-I used AWS Sagemaker to train a ResNet-18 to perform image classification and used the Sagemaker profiling, debugger, and hyperparameter tuning with $3. 
+I used AWS Sagemaker to train a ResNet-18 to perform image classification and used the Sagemaker profiling, debugger, and hyperparameter tuning with less than $4. 
 
 <img width="400" alt="Screen Shot 2022-01-02 at 10 11 52 PM" src="https://user-images.githubusercontent.com/62487364/147903583-ac6b7cce-edc1-430e-8a08-6227045521fc.png">
 
