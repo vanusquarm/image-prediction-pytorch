@@ -15,15 +15,22 @@ The project is designed to be dataset independent so if there is a dataset that 
 Upload the data to an S3 bucket through the AWS Gateway so that SageMaker has access to the data. 
 
 ## Hyperparameter Tuning
-What kind of model did you choose for this experiment and why? Give an overview of the types of parameters and their ranges used for the hyperparameter search
+I chose ResNet-18 because it is fast and gives good results. 
+The hyperparameters I have tuned were:
+- learning rate 
+- batch size
+- epochs
+**Training Jobs:**
+![Training Jobs](https://user-images.githubusercontent.com/62487364/147903084-75bc927d-5775-43dc-9763-34c0199106d0.png)
 
-Remember that your README should:
-- Include a screenshot of completed training jobs
-- Logs metrics during the training process
+**Best Hyperparameters:**
+![Hyperparameters](https://user-images.githubusercontent.com/62487364/147903139-41235fc6-1c2d-4a97-a471-ab3520adf9f3.png)
+
 - Tune at least two hyperparameters
 - Retrieve the best best hyperparameters from all your training jobs
 
 ## Debugging and Profiling
+
 First, I made a working model with tuned hyperparameters. Then I imported the rules and configs needed to set up the debugger and profiler. I set the rules and configs according to what I wanted to test, for example, overfit and GPU utilization. After that, I made the required adjustments to `train_model.py` to make my debugger and profiler work. I finally ran it with a new estimator and printed the results. 
 
 ### Results
