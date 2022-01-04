@@ -8,6 +8,7 @@ import torchvision
 import torchvision.models as models
 import torchvision.transforms as transforms
 import os
+import sys
 import logging
 import argparse
 from PIL import ImageFile
