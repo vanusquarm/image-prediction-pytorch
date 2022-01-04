@@ -33,12 +33,12 @@ def test(model, test_loader, hook):
     logger.info(f"Test set: Average accuracy: {100*total_acc}%")
     
 
-def train(model, train_loader, epochs, criterion, optimizer, hook):
-    model.train()
-    hook.set_mode(smd.modes.TRAIN)
+def train(model, train_loader, valid_loader, epochs, criterion, optimizer, hook):
     count = 0
     for e in range(epochs):
         print(e)
+        model.train()
+        hook.set_mode(smd.modes.TRAIN)
         for (inputs, labels) in train_loader:
             optimizer.zero_grad()
             outputs = model(inputs)
@@ -46,8 +46,19 @@ def train(model, train_loader, epochs, criterion, optimizer, hook):
             loss.backward()
             optimizer.step()
             count += len(inputs)
-            if count > 400:
-                break
+
+        # validation
+        model.eval()
+        hook.set_mode(smd.modes.EVAL)
+        running_corrects=0
+        with torch.no_grad():
+            for (inputs, labels) in valid_loader:
+                outputs = model(inputs)
+                _, preds = torch.max(outputs, 1)
+                running_corrects += torch.sum(preds == labels.data).item()
+        total_acc = running_corrects/ len(valid_loader.dataset)
+        logger.info(f"Valid set: Average accuracy: {100*total_acc}%")
+        
     return model
 
 def net():
@@ -98,9 +109,9 @@ def main(args):
 
     train_loader, valid_loader, test_loader = create_data_loaders(args.data, args.batch_size, args.test_batch_size)
     
-    model=train(model, train_loader, args.epochs, loss_criterion, optimizer, hook)
+    model=train(model, train_loader, valid_loader, args.epochs, loss_criterion, optimizer, hook)
     
-    test(model, test_loader, hook)
+    # test(model, test_loader, hook)
     
     torch.save(model.cpu().state_dict(), os.path.join(args.model_dir, "model.pth"))
 
