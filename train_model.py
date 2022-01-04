@@ -30,7 +30,7 @@ def test(model, test_loader, hook):
         _, preds = torch.max(outputs, 1)
         running_corrects += torch.sum(preds == labels.data).item()
     total_acc = running_corrects/ len(test_loader.dataset)
-    logger.info(f"Test set: Average accuracy: {100*total_acc}")
+    logger.info(f"Test set: Average accuracy: {100*total_acc}%")
     
 
 def train(model, train_loader, epochs, criterion, optimizer, hook):
