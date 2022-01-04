@@ -54,6 +54,7 @@ def train(model, train_loader, valid_loader, epochs, criterion, optimizer, hook)
         with torch.no_grad():
             for (inputs, labels) in valid_loader:
                 outputs = model(inputs)
+                loss = criterion(outputs, labels)
                 _, preds = torch.max(outputs, 1)
                 running_corrects += torch.sum(preds == labels.data).item()
         total_acc = running_corrects/ len(valid_loader.dataset)
