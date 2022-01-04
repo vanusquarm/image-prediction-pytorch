@@ -8,10 +8,14 @@ import torchvision
 import torchvision.models as models
 import torchvision.transforms as transforms
 import os
+import logging
 import argparse
 from PIL import ImageFile
 ImageFile.LOAD_TRUNCATED_IMAGES = True
 
+logger=logging.getLogger(__name__)
+logger.setLevel(logging.DEBUG)
+logger.addHandler(logging.StreamHandler(sys.stdout))
 
 def test(model, test_loader):
     model.eval()
@@ -21,7 +25,7 @@ def test(model, test_loader):
         _, preds = torch.max(outputs, 1)
         running_corrects += torch.sum(preds == labels.data).item()
     total_acc = running_corrects / len(test_loader.dataset)
-    print(f"Test set: Average accuracy: {100*total_acc}")
+    logger.info(f"Test set: Average accuracy: {100*total_acc}")
     
 
 def train(model, train_loader, epochs, criterion, optimizer):
@@ -122,6 +126,12 @@ if __name__=='__main__':
     parser.add_argument('--model_dir', type=str, default=os.environ['SM_MODEL_DIR'])
     
     args=parser.parse_args()
+    
+    logging.info(f"Learning Rate: {args.lr}")
+    logging.info(f"Momentum: {args.momentum}")
+    logging.info(f"Batch Size: {args.batch_size}")
+    logging.info(f"Test Batch Size: {args.test_batch_size}")
+    logging.info(f"Epochs: {args.epochs}")
     
     main(args)
 

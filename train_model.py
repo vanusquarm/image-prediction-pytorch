@@ -8,26 +8,34 @@ import torchvision
 import torchvision.models as models
 import torchvision.transforms as transforms
 import os
+import sys
+import logging
 import argparse
 from PIL import ImageFile
 ImageFile.LOAD_TRUNCATED_IMAGES = True
 
+import smdebug.pytorch as smd
 
-def test(model, test_loader):
+logger=logging.getLogger(__name__)
+logger.setLevel(logging.DEBUG)
+logger.addHandler(logging.StreamHandler(sys.stdout))
+
+
+def test(model, test_loader, hook):
     model.eval()
+    hook.set_mode(smd.modes.EVAL)
     running_corrects=0
     for (inputs, labels) in test_loader:
         outputs = model(inputs)
         _, preds = torch.max(outputs, 1)
         running_corrects += torch.sum(preds == labels.data).item()
     total_acc = running_corrects/ len(test_loader.dataset)
-    print(f"Test set: Average accuracy: {100*total_acc}")
+    logger.info(f"Test set: Average accuracy: {100*total_acc}")
     
 
-def train(model, train_loader, epochs, criterion, optimizer):
-    
-    
+def train(model, train_loader, epochs, criterion, optimizer, hook):
     model.train()
+    hook.set_mode(smd.modes.TRAIN)
     count = 0
     for e in range(epochs):
         print(e)
@@ -78,18 +86,21 @@ def create_data_loaders(data, batch_size, test_batch_size):
 
 def main(args):
     device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
-    print(f"Running on Device {device}")
+    logging.info(f"Running on Device {device}")
 
     model=net()
     model=model.to(device)
     loss_criterion = nn.CrossEntropyLoss()
     optimizer = optim.Adam(model.fc.parameters(), lr=args.lr)
+    
+    hook = smd.Hook.create_from_json_file()
+    hook.register_hook(model)
 
     train_loader, valid_loader, test_loader = create_data_loaders(args.data, args.batch_size, args.test_batch_size)
     
-    model=train(model, train_loader, args.epochs, loss_criterion, optimizer)
+    model=train(model, train_loader, args.epochs, loss_criterion, optimizer, hook)
     
-    test(model, test_loader)
+    test(model, test_loader, hook)
     
     torch.save(model.cpu().state_dict(), os.path.join(args.model_dir, "model.pth"))
 
@@ -127,5 +138,11 @@ if __name__=='__main__':
     parser.add_argument('--model_dir', type=str, default=os.environ['SM_MODEL_DIR'])
     
     args=parser.parse_args()
+    
+    logging.info(f"Learning Rate: {args.lr}")
+    logging.info(f"Momentum: {args.momentum}")
+    logging.info(f"Batch Size: {args.batch_size}")
+    logging.info(f"Test Batch Size: {args.test_batch_size}")
+    logging.info(f"Epochs: {args.epochs}")
     
     main(args)
