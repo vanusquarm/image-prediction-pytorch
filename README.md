@@ -2,11 +2,14 @@
 This is an image classfication problem using an imagenet pretrained model called resnet-18 with sagemaker studio 
 In the project, we profile the model's performance with respect to cpu, gpu, io and memory utilization. We first run the training with a higher hyperparameter ranges and then select the best hyperparameters to retrain our model. 
 
+
 ## Project Set Up and Installation
 The project repository is cloned from the provided link to the udacity's github repo (deep-learning-topics-within-computer-vision-nlp-project-starter)
 
+
 ## Dataset
 The dog breed dataset is used for the training 
+
 
 ### Access
 The data is uploaded to the S3 bucket through the AWS Gateway so that SageMaker has access to the data, using sagemaker.Session().upload() api.
@@ -48,8 +51,7 @@ hyperparameters = {'batch-size': 32, 'lr': '0.1022061234548314', 'epochs': '1'}
 
 
 **Training Jobs:**
-I used 4 max jobs with 2 concurrent jobs.
-It took 14 minutes to complete all 4 jobs, I will use 4 concurrent jobs next time to save time. 
+The initial training without hyperparameter tuning took relatively longer than the one with hyperparameter set 
 ![Training Jobs](https://github.com/vanusquarm/Dog-breed-prediction/blob/main/screenshots/training%20jobs.PNG)
 
 **Best Hyperparameters:**
