@@ -28,11 +28,11 @@ Below are hyperparameter types and their respective ranges used in the training
 ```python
 hyperparameter_ranges = {
     "lr": ContinuousParameter(0.1, 0.11),
-    "batch-size": CategoricalParameter([16, 32]),
+    "batch-size": CategoricalParameter([16, 32, 128]),
     "epochs": IntegerParameter(1, 2)
 }
 ```
-The objective type is to minimize loss.
+The objective type is to maximize accuracy.
 
 ```python
 objective_metric_name = "average test accuracy"
@@ -43,14 +43,17 @@ metric_definitions = [{"Name": "average test accuracy", "Regex": "Test set: Aver
 **Training Jobs:**
 I used 4 max jobs with 2 concurrent jobs.
 It took 14 minutes to complete all 4 jobs, I will use 4 concurrent jobs next time to save time. 
-![Training Jobs](https://user-images.githubusercontent.com/62487364/147903084-75bc927d-5775-43dc-9763-34c0199106d0.png)
+![Training Jobs](https://github.com/vanusquarm/Dog-breed-prediction/blob/main/screenshots/Active%20Endpoint.PNG)
 
 **Best Hyperparameters:**
-![Hyperparameters](https://user-images.githubusercontent.com/62487364/147903139-41235fc6-1c2d-4a97-a471-ab3520adf9f3.png)
+![Hyperparameters](https://github.com/vanusquarm/Dog-breed-prediction/blob/main/screenshots/best-training%20jobs.PNG)
 
 
 ## Debugging and Profiling
-First, I made a working model with tuned hyperparameters. Then I imported the rules and configs needed to set up the debugger and profiler. I set the rules and configs according to what I wanted to test, for example, overfit and GPU utilization. After that, I made the required adjustments to `train_model.py` to make my debugger and profiler work. I finally ran it with a new estimator and printed the results. 
+I first configured a debugger rule object that accepts a list of rules against output tensors that I want to evaluate. SageMaker Debugger automatically runs the ProfilerReport rule by default. This rules autogenerates a profiling report
+Secondly, I configured a debugger hook parameter to adjust save intervals of the output tensors in the different training phases.
+Next, I constructed a PyTorch estimator object with the debugger rule object and hook parameters.
+I finally started the training job by fitting the training data to the estimator object.
 
 ### Results
 Although I added the rule `LowGPUUtilization` for the profiler, I could not see it in action since I could not afford to run a GPU instance. 
@@ -61,24 +64,32 @@ If `LowGPUUtilization` is observed, I would switch from a GPU instance to a CPU 
 If there was an issue such as job failure due to OutOfMemory while debugging, I would choose a bigger machine with more memory to combat this. 
 
 ## Model Deployment
-The model is deployed at an endpointed named `pytorch-inference-2022-01-03-04-57-09-279` on a `ml.m5.large` instance.
-It takes the `content_type` of "image/jpeg" as Tensor binary input and return the classification result, the other `content_type`s are handled with an exception. 
-The model automatically resizes the image that is inputted, so there is no need for preprocessing images before querying. 
+The deployed model runs on 1 instance type of a standard compute resource ("ml.t2.medium"). The configuration of these parameters are set using the PyTorch deploy function. 
+Upon performing the model deploy, an Endpoint is created. 
+To query the endpoint with the test sample input, first perform a resize, crop, toTensor, and normalization transformation on the image, and then pass the transformed image to the predict function of the endpoint.
 
-To query the endpoint, use [Python Pillow](https://pypi.org/project/Pillow/) and io to transform the jpg to Tensor binary and serve it to the endpoint.
+Use [Python Pillow](https://pypi.org/project/Pillow/) and io to transform the jpg to Tensor binary and serve it to the endpoint.
 ```python
-from PIL import Image
-import io
-buf = io.BytesIO()
-Image.open("dogImages/test/001.Affenpinscher/Affenpinscher_00036.jpg").save(buf, format="JPEG")
+#   Run a prediction on the endpoint
 
-response = predictor.predict(buf.getvalue())
+from PIL import Image
+import torchvision.transforms as transforms
+
+transform = transforms.Compose([
+        transforms.Resize(256),
+        transforms.RandomCrop(224),
+        transforms.ToTensor(),
+        transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225])
+    ])
+PIL_image = Image.open("dogImages/test/001.Affenpinscher/Affenpinscher_00071.jpg") 
+image = transform(PIL_image) #   Your code to load and preprocess image to send to endpoint for prediction
+payload = image.unsqueeze(dim=0) #  Changes the shape of tensor from [224, 224, 3] to [1, 3, 224, 224].
+response = predictor.predict(payload) # Make your prediction
+response
 ```
 
 **ACTIVE ENDPOINT**
 - SAGEMAKER STUDIO UI
-![Active Endpoint](active_endpoint_screenshot.png)
+![Active Endpoint](https://github.com/vanusquarm/Dog-breed-prediction/blob/main/screenshots/Active%20Endpoint.PNG)
 
-- SAGEMAKER INFERENCE UI 
-<img width="1105" alt="Screen Shot 2022-01-02 at 10 12 17 PM" src="https://user-images.githubusercontent.com/62487364/147904512-637fafd2-7145-4d92-be54-c0d32c5473e0.png">
 
