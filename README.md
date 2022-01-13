@@ -1,23 +1,26 @@
-# Image Classification using AWS SageMaker
-I used AWS Sagemaker to train a ResNet-18 to perform image classification and used the Sagemaker profiling, debugger, and hyperparameter tuning with less than $4. 
-
-<img width="400" alt="Screen Shot 2022-01-02 at 10 11 52 PM" src="https://user-images.githubusercontent.com/62487364/147903583-ac6b7cce-edc1-430e-8a08-6227045521fc.png">
-
+# DogBreed-Classification-With-Amazon-Sagemaker
+This is an image classfication problem using an imagenet pretrained model called resnet-18 with sagemaker studio 
+In the project, we profile the model's performance with respect to cpu, gpu, io and memory utilization. We first run the training with a higher hyperparameter ranges and then select the best hyperparameters to retrain our model. 
 
 ## Project Set Up and Installation
-I cloned the project repository and downloaded the starter files. 
+The project repository is cloned from the provided link to the udacity's github repo (deep-learning-topics-within-computer-vision-nlp-project-starter)
 
 ## Dataset
-The dataset I used was the dogbreed classification dataset which can be found in the classroom.
-I verfied the folder structure and some of the images. 
+The dog breed dataset is used for the training 
 
 ### Access
-I uploaded the data to an S3 bucket through the AWS Gateway so that SageMaker has access to the data. 
-- s3://sagemaker-us-east-1-709614815312/dog-image-data/
+The data is uploaded to the S3 bucket through the AWS Gateway so that SageMaker has access to the data, using sagemaker.Session().upload() api.
+- s3://{bucket-name}/dog-image-data/
+
+## Script Files used
+1. `hpo.py` for hyperparameter tuning jobs where we train the model for multiple time with different hyperparameters and search for the best one based on loss metrics.
+2. `train_model.py` for really training the model with the best parameters getting from the previous tuning jobs, and put debug and profiler hooks for debugging purpose.
+
 
 ## Hyperparameter Tuning
-I chose ResNet-18 because the dataset I chose was for image classification and ResNet-18 is fast and gives good results. 
-The hyperparameters I have tuned were:
+I used a ResNet-18 pretrained model because it performs best for image classification tasks. Resnet is also resilient to the vanishing gradient problem, and the number of stacked layers does not degrade the network performance on the test dataset.
+
+Below are hyperparameter types and their respective ranges used in the training
 - learning rate 
 - batch size
 - epochs
@@ -29,8 +32,8 @@ hyperparameter_ranges = {
     "epochs": IntegerParameter(1, 2)
 }
 ```
+The objective type is to minimize loss.
 
-I tuned to maximize the average test accuracy with the following. 
 ```python
 objective_metric_name = "average test accuracy"
 objective_type = "Maximize"
